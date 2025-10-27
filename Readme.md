@@ -15,9 +15,9 @@ This script simulates this process by:
 
 ---
 
-## How to Run the Simulation
+## Prerequisites to Run the Simulation
 
-**Prerequisites:** Make sure you have Python and the `matplotlib` library installed. If you don't have `matplotlib`, you can install it using pip:
+Make sure you have Python and the `matplotlib` library installed. If you don't have `matplotlib`, you can install it using pip:
 
     pip install matplotlib
 ---
