@@ -1,6 +1,7 @@
 import demes
 import random
 import math
+import matplotlib.pyplot as plt
 
 class WrightFisherSim:
     def __init__(self, demes_file_path, initial_allele_frequency=0.5, seed=None):
@@ -210,3 +211,31 @@ class WrightFisherSim:
             self._handle_pulses(t)
 
         return self.history
+    
+
+def plot_results(results):
+    """
+    Visualizes the simulation results.
+    
+    Args:
+        results (dict): The dictionary returned by sim.run() containing
+                        population names and their allele frequency lists.
+    """
+    plt.figure(figsize=(14, 7))
+    total_generations = max(len(v) for v in results.values())
+
+    # Plot Each Population
+    for pop_name, frequencies in results.items():
+        # Calculate x-axis alignment so all populations end at the "Present"
+        start_gen = total_generations - len(frequencies)
+        x_axis = range(start_gen, total_generations)
+        
+        plt.plot(x_axis, frequencies, label=pop_name, linewidth=2)
+
+    # Labels and Show
+    plt.title("Wright-Fisher Simulation Results")
+    plt.xlabel("Generations")
+    plt.ylabel("Allele Frequency")
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.show()
