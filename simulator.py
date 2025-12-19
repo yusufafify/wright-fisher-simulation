@@ -27,7 +27,11 @@ class WrightFisherSim:
         new_pop_alleles = []
         
         # Check for split or merge event (Ancestry exists)
-        if ancestors and proportions:
+        if ancestors:
+            # If proportions not provided, divide equally among ancestors
+            if not proportions:
+                proportions = [1.0 / len(ancestors)] * len(ancestors)
+            
             # Iterate through ancestors and sample based on proportions
             for ancestor, prop in zip(ancestors, proportions):
                 if ancestor in self.current_populations:
