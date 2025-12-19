@@ -103,7 +103,7 @@ class WrightFisherSim:
                         
                         # Only proceed if we actually have migrants to move
                         if num_migrants > 0:
-                            migrants = [tuple(random.choice(source_pop)) for _ in range(num_migrants)]
+                            migrants = [random.choice(source_pop) for _ in range(num_migrants)]
                             for m in migrants:
                                 random_idx = random.randint(0, len(dest_pop) - 1)
                                 dest_pop[random_idx] = m
@@ -133,7 +133,7 @@ class WrightFisherSim:
                     num_migrants = int(len(dest_pop) * proportion)
                     
                     # Select migrants and overwrite random individuals in dest
-                    migrants = [tuple(random.choice(source_pop)) for _ in range(num_migrants)]
+                    migrants = [random.choice(source_pop) for _ in range(num_migrants)]
                     
                     for m in migrants:
                         random_idx = random.randint(0, len(dest_pop) - 1)
