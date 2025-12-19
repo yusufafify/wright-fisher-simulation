@@ -1,1 +1,1 @@
-from .simulator import WrightFisherSim, plot_results
+from .core import WrightFisherSim, plot_results
