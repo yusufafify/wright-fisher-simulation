@@ -13,7 +13,7 @@ class WrightFisherSim:
             
         self.alleles= alleles if alleles else [0, 1]
         
-        if initial_allele_frequency:
+        if initial_allele_frequency is not None:
             self.initial_freqs = initial_allele_frequency
         else:
             self.initial_freqs={a: 1.0 / len(self.alleles) for a in self.alleles}
