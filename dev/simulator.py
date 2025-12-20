@@ -18,7 +18,10 @@ class WrightFisherSim:
         else:
             self.initial_freqs={a: 1.0 / len(self.alleles) for a in self.alleles}
         
-        
+        total = sum(self.initial_freqs.values())
+        if not math.isclose(total, 1.0):
+            raise ValueError("Initial allele frequencies must sum to 1.")
+
         # Track active populations (name -> list of alleles)
         self.current_populations = {}
         
