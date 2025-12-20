@@ -63,7 +63,7 @@ class WrightFisherSim:
                 if primary_source:
                     new_pop_alleles.append(random.choice(primary_source))
                 else:
-                    new_pop_alleles.append(0)
+                    new_pop_alleles.append(random.choice(self.alleles))
             
             # Shuffle so the alleles aren't ordered by ancestor
             random.shuffle(new_pop_alleles)
