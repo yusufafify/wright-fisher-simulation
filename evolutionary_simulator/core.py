@@ -2,6 +2,7 @@ import demes
 import random
 import math
 import matplotlib.pyplot as plt
+from collections import Counter
 
 class WrightFisherSim:
     def __init__(self, demes_file_path, alleles=None, initial_allele_frequency=0.5, seed=None):
@@ -210,7 +211,8 @@ class WrightFisherSim:
                 self.current_populations[pop_name] = new_alleles
                 
                 # Save frequency data
-                freq = sum(new_alleles) / len(new_alleles)
+                counts =Counter(new_alleles)
+                freq = {a: counts.get(a,0) / len(new_alleles) for a in self.alleles}
                 self.history[pop_name].append(freq)
 
             # Migration and Pulse Steps
