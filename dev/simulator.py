@@ -1,16 +1,23 @@
 import demes
 import random
 import math
+from collections import Counter
 
 class WrightFisherSim:
-    def __init__(self, demes_file_path, initial_allele_frequency=0.5, seed=None):
+    def __init__(self, demes_file_path, alleles=None, initial_allele_frequency=0.5, seed=None):
         # Load the graph using demes library
         self.graph = demes.load(demes_file_path)
         
         if seed is not None:
             random.seed(seed)
             
-        self.initial_freq = initial_allele_frequency
+        self.alleles= alleles if alleles else [0, 1]
+        
+        if initial_allele_frequency:
+            self.initial_freqs = initial_allele_frequency
+        else:
+            self.initial_freqs={a: 1.0 / len(self.alleles) for a in self.alleles}
+        
         
         # Track active populations (name -> list of alleles)
         self.current_populations = {}
@@ -60,10 +67,11 @@ class WrightFisherSim:
 
         else:
             # Create de novo population
-            new_pop_alleles = [
-                1 if random.random() < self.initial_freq else 0
-                for _ in range(int(population_size))
-            ]
+            new_pop_alleles = random.choices(
+                population=list(self.initial_freqs.keys()),
+                weights=list(self.initial_freqs.values()),
+                k=int(population_size)
+            )
         
         self.current_populations[pop_name] = new_pop_alleles
         self.history[pop_name] = [] 
@@ -202,9 +210,9 @@ class WrightFisherSim:
                 self.current_populations[pop_name] = new_alleles
                 
                 # Save frequency data
-                freq = sum(new_alleles) / len(new_alleles)
-                self.history[pop_name].append(freq)
-
+                counts = Counter(new_alleles)
+                freqs = {a: counts.get(a, 0) / len(new_alleles) for a in self.alleles}
+                self.history[pop_name].append(freqs)
             # Migration and Pulse Steps
             self._handle_migration(t)
             self._handle_pulses(t)
