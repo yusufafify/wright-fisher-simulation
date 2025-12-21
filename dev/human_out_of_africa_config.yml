@@ -1,0 +1,24 @@
+new_alleles:
+  # Ancient allele in Africa
+  - allele: "A"
+    population: "YRI"
+    start_time: 9000
+    initial_frequency: 0.05
+
+  # Derived allele after CEU split
+  - allele: "B"
+    population: "CEU"
+    start_time: 5000
+    initial_frequency: 0.10
+
+  # East Asian specific allele
+  - allele: "C"
+    population: "CHB"
+    start_time: 600
+    initial_frequency: 0.15
+
+  # Late recent allele in Europe
+  - allele: "D"
+    population: "CEU"
+    start_time: 300
+    initial_frequency: 0.05
