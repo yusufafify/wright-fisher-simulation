@@ -9,7 +9,8 @@ setup(
     install_requires=[
         "demes",
         "matplotlib",
-        "numpy"
+        "numpy",
+        "yaml"
     ],
     python_requires=">=3.7",
 )
