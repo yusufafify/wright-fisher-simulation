@@ -81,8 +81,6 @@ pip install -e .
 
 ### R Installation
 
-✅ **Status**: Fully functional and tested
-
 The simulator is also available as an R package that wraps the Python implementation.
 
 **Installation (3 steps):**
