@@ -47,21 +47,36 @@ setup_python <- function(python_path = NULL) {
         reticulate::py_install(c("demes", "matplotlib", "numpy"))
     }
 
-    # Get package path
+    # Get package installation path
     pkg_path <- system.file(package = "WrightFisherSim")
+
     if (pkg_path == "") {
         # Development mode - use current directory
         pkg_path <- getwd()
     }
 
-    # Add evolutionary_simulator to Python path
-    sys <- reticulate::import("sys")
+    # Add package path to Python sys.path so it can find evolutionary_simulator
+    sys <- reticulate::import("sys", convert = TRUE)
+
+    # The evolutionary_simulator module is in inst/ which becomes the package root
     if (!pkg_path %in% sys$path) {
         sys$path <- c(pkg_path, sys$path)
     }
 
-    # Import the module
-    .wright_fisher_py <<- reticulate::import("evolutionary_simulator.core")
+    # Try to import the module
+    tryCatch(
+        {
+            .wright_fisher_py <<- reticulate::import("evolutionary_simulator.core")
+        },
+        error = function(e) {
+            stop(
+                "Failed to import evolutionary_simulator module. ",
+                "Make sure the package is properly installed.\n",
+                "Package path: ", pkg_path, "\n",
+                "Error: ", conditionMessage(e)
+            )
+        }
+    )
 
     invisible(NULL)
 }
