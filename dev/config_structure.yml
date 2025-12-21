@@ -1,0 +1,16 @@
+new_alleles:
+  - allele: "D"
+    population: "Pop_A"
+    start_time: 45
+    initial_frequency: 0.2
+  - allele: "C"
+    population: "Pop_B"
+    start_time: 30
+    initial_frequency: 0.3
+  - allele: "E"
+    population: "Pop_B"
+    start_time: 40
+    initial_frequency: 0.05
+  - allele: "D"
+    population: "Ancestral"
+    start_time: 80

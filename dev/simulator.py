@@ -2,13 +2,33 @@ import demes
 import random
 import math
 from collections import Counter
+import yaml
 
 class WrightFisherSim:
-    def __init__(self, demes_file_path, alleles=None, initial_allele_frequency=0.5, 
+    def __init__(self, demes_file_path, config_file_path=None, alleles=None, initial_allele_frequency=0.5, 
                  mutation_rate=0.0, wild_type=0, seed=None, selection_coefficients=None):
+
         # Load the graph using demes library
         self.graph = demes.load(demes_file_path)
-        
+        # Load the configuration file if provided
+        self.config = {}
+        self.new_alleles_config = []
+        if config_file_path:
+            with open(config_file_path, 'r') as file:
+                self.config = yaml.safe_load(file)
+            # Extract new alleles configuration if present
+            self.new_alleles_config = self.config.get("new_alleles", [])
+        # If no new alleles config is provided, use an empty list
+                
+        #index by generation for first lookup
+        self.alleles_by_time = {}
+        for entry in self.new_alleles_config:
+            required_fields = {"allele", "population", "start_time"}
+            if not required_fields.issubset(entry):
+                raise ValueError(f"New allele entry missing required fields: {required_fields}")
+            t = int(entry["start_time"])
+            self.alleles_by_time.setdefault(t,[]).append(entry)
+
         if seed is not None:
             random.seed(seed)
             
@@ -23,7 +43,16 @@ class WrightFisherSim:
             self.fitness[allele] = max(0.0, 1.0 + s)
 
         if initial_allele_frequency is not None:
-            self.initial_freqs = initial_allele_frequency
+            if isinstance(initial_allele_frequency, dict):
+             self.initial_freqs = initial_allele_frequency
+            else:
+                if len(self.alleles) != 2:
+                 raise ValueError("Single float initial frequency can only be used for 2 alleles.")
+                self.initial_freqs = {
+                    self.alleles[0]: initial_allele_frequency,
+                    self.alleles[1]: 1.0 - initial_allele_frequency
+                }
+ 
         else:
             self.initial_freqs={a: 1.0 / len(self.alleles) for a in self.alleles}
         
@@ -40,6 +69,35 @@ class WrightFisherSim:
         
         # Track frequency history for plotting
         self.history = {}
+        print("loaded new alleles config:")
+        for c in self.new_alleles_config:
+            print(f"  {c['allele']} in {c['population']} at {c['start_time']}")
+
+    def _handle_new_alleles(self, generation):
+        """
+        Introduce new alleles at specific generations and populations
+        """
+        if generation not in self.alleles_by_time:
+            return
+        for entry in self.alleles_by_time[generation]:
+            pop = entry["population"]
+            allele = entry["allele"]
+            freq = entry.get("initial_frequency", 0.05)
+            if pop in self.current_populations:
+                pop_alleles = self.current_populations[pop]
+                if len(pop_alleles)==0:
+                    continue
+            else:
+                continue    
+            if allele not in self.alleles:
+                self.alleles.append(allele)
+            else:
+                print(f"Warning: Allele {allele} already exists in population {pop}. Overwriting individuals.")    
+            # Number of indviduals to convert
+            N = max(1, int(len(pop_alleles)*freq))
+            indices = random.sample(range(len(pop_alleles)),N)
+            for i in indices:
+                pop_alleles[i]= allele    
 
     def _initialize_population(self, pop_name, population_size, ancestors=None, proportions=None):
         """
@@ -211,7 +269,7 @@ class WrightFisherSim:
 
         # Iterate backwards from past to present
         for t in range(start_generation, -1, -1):
-            
+
             # Handle population creation (Births)
             for pop in self.graph.demes:
                 # Check if the population starts at this specific generation
@@ -230,6 +288,8 @@ class WrightFisherSim:
                         proportions = pop.proportions
                         
                         self._initialize_population(pop.name, initial_size, ancestors, proportions)
+
+            self._handle_new_alleles(t)
 
             # Evolution Step (Wright-Fisher)
             # Iterate over a list of keys to allow dictionary modification if needed
