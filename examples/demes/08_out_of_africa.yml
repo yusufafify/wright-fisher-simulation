@@ -1,0 +1,34 @@
+description: Out-of-Africa human demographic model (simplified)
+time_units: generations
+
+demes:
+  # African ancestral population
+  - name: African
+    start_time: .inf
+    epochs:
+      - start_size: 12000
+        end_time: 2000
+      - start_size: 12000
+        end_time: 0
+  
+  # Out-of-Africa bottleneck and expansion
+  - name: Out_of_Africa
+    ancestors: [African]
+    start_time: 2000
+    epochs:
+      # Bottleneck
+      - start_size: 1000
+        end_time: 1000
+      # Expansion
+      - start_size: 1000
+        end_size: 30000
+        size_function: exponential
+        end_time: 0
+
+# Back-migration to Africa (low rate)
+migrations:
+  - source: Out_of_Africa
+    dest: African
+    rate: 0.0001
+    start_time: 2000
+    end_time: 0

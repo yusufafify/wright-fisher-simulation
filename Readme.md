@@ -81,24 +81,30 @@ pip install -e .
 
 ### R Installation
 
+✅ **Status**: Fully functional and tested
+
 The simulator is also available as an R package that wraps the Python implementation.
 
-**Install from GitHub:**
+**Installation (3 steps):**
 
 ```r
-# Install devtools if needed
+# 1. Install from GitHub
 install.packages("devtools")
-
-# Install from GitHub
 devtools::install_github("yusufafify/wright-fisher-simulation")
+
+# 2. Restart R, then install Python dependencies
+reticulate::py_install(c("demes", "matplotlib", "numpy"), pip = TRUE)
+
+# 3. Restart R again, then use
+library(WrightFisherSim)
 ```
 
-**R Usage:**
+**Usage:**
 
 ```r
 library(WrightFisherSim)
 
-# Run simulation
+# Run simulation with mutations
 results <- wright_fisher_sim(
   demes_file = system.file("dev/deme_test.yml", package = "WrightFisherSim"),
   initial_frequency = 0.8,
@@ -106,11 +112,12 @@ results <- wright_fisher_sim(
   seed = 42
 )
 
-# Plot results
+# View and plot
+print(results)
 plot_wright_fisher(results)
 ```
 
-See `R_README.md` for complete R package documentation.
+**Complete documentation**: See `R_README.md`
 
 ---
 

@@ -1,0 +1,42 @@
+description: Two populations with continuous migration
+time_units: generations
+
+demes:
+  # Ancestral population
+  - name: Ancestral
+    start_time: .inf
+    epochs:
+      - start_size: 2000
+        end_time: 150
+  
+  # Population A
+  - name: Pop_A
+    ancestors: [Ancestral]
+    start_time: 150
+    epochs:
+      - start_size: 3000
+        end_time: 0
+  
+  # Population B
+  - name: Pop_B
+    ancestors: [Ancestral]
+    start_time: 150
+    epochs:
+      - start_size: 3000
+        end_time: 0
+
+# Continuous bidirectional migration
+migrations:
+  # A to B
+  - source: Pop_A
+    dest: Pop_B
+    rate: 0.01  # 1% migration per generation
+    start_time: 150
+    end_time: 0
+  
+  # B to A
+  - source: Pop_B
+    dest: Pop_A
+    rate: 0.01
+    start_time: 150
+    end_time: 0

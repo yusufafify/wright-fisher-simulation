@@ -2,111 +2,149 @@
 
 R interface for the Wright-Fisher population genetics simulator with mutation support.
 
-## Complete Installation Guide
+---
 
-### Step 1: Install the R Package
+## Installation (Simple 3-Step Process)
+
+### Step 1: Install from GitHub
 
 ```r
-# Install devtools if not already installed
+# Install devtools if needed
 install.packages("devtools")
 
-# Install WrightFisherSim from GitHub
+# Install WrightFisherSim
 devtools::install_github("yusufafify/wright-fisher-simulation")
 ```
 
-**Or from local source:**
+### Step 2: Setup Python (In Fresh R Session)
+
+**Restart R first**, then:
 
 ```r
-# Navigate to the package directory, then:
-devtools::install()
-```
-
-### Step 2: Install Python Dependencies
-
-**IMPORTANT**: Do this in a FRESH R session (restart R first)
-
-```r
-# Method A: Use the setup script (recommended)
-source(system.file("setup_r_package.R", package = "WrightFisherSim"))
-
-# Method B: Manual installation
+# Install Python dependencies
 reticulate::py_install(c("demes", "matplotlib", "numpy"), pip = TRUE)
 ```
 
-### Step 3: Restart R
+### Step 3: Restart R and Use
 
-**CRITICAL**: You must restart R after installing Python packages.
-
-- In RStudio: `Session -> Restart R`
-- Or quit and reopen R
-
-### Step 4: Test the Installation
+**Restart R again**, then:
 
 ```r
 library(WrightFisherSim)
 
-# Run test
-source(system.file("test_package_after_install.R", package = "WrightFisherSim"))
+# Run a simulation
+results <- wright_fisher_sim(
+  demes_file = system.file("dev/deme_test.yml", package = "WrightFisherSim"),
+  initial_frequency = 0.8,
+  mutation_rate = 0.001,
+  seed = 42
+)
+
+print(results)
+plot_wright_fisher(results)
+```
+
+---
+
+## Expected Output
+
+When everything is working correctly, you'll see:
+
+```
+✓ Python environment initialized successfully
+Simulation running from generation 100 to 0...
+Gen initialized: Ancestral (Size: 100)
+Gen initialized: Pop_A (Size: 100)
+Gen initialized: Pop_B (Size: 100)
+✓ Simulation complete
+```
+
+---
+
+## Quick Reference
+
+### Basic Usage
+
+```r
+library(WrightFisherSim)
+
+# Pure drift (no mutations)
+results <- wright_fisher_sim(
+  demes_file = "path/to/model.yml",
+  initial_frequency = 0.5,
+  mutation_rate = 0.0,
+  seed = 42
+)
+
+# With mutations
+results <- wright_fisher_sim(
+  demes_file = "path/to/model.yml",
+  initial_frequency = 0.9,
+  mutation_rate = 0.005,
+  wild_type = 0,
+  seed = 123
+)
+
+# Visualize
+plot_wright_fisher(results, title = "My Simulation")
+
+# Save plot
+library(ggplot2)
+p <- plot_wright_fisher(results)
+ggsave("output.png", p, width = 10, height = 6)
 ```
 
 ---
 
 ## Troubleshooting
 
-### Problem: "ModuleNotFoundError: No module named 'demes'"
+### "ModuleNotFoundError: No module named 'demes'"
 
-**Solution**:
+This means Python packages aren't installed.
 
-1. **Restart R completely** (close and reopen)
-2. Install Python packages BEFORE loading the package:
-   ```r
-   # In fresh R session
-   reticulate::py_install(c("demes", "matplotlib", "numpy"), pip = TRUE)
-   ```
-3. **Restart R again**
-4. Load package:
-   ```r
-   library(WrightFisherSim)
-   ```
-
-### Problem: "ephemeral virtual environment" warning
-
-This happens when you try to install Python packages after Python has already initialized.
-
-**Solution**:
+**Fix:**
 1. Restart R
-2. Install Python packages FIRST (before any library calls)
-3. Then use the package
+2. Run: `reticulate::py_install(c("demes", "matplotlib", "numpy"), pip = TRUE)`
+3. Restart R again
+4. Try again
 
-### Problem: Can't find test file
+### "cannot change value of locked binding"
+
+This was fixed in recent versions.
+
+**Fix:**
+1. Update to latest version: `devtools::install_github("yusufafify/wright-fisher-simulation", force = TRUE)`
+2. Restart R
+
+### Can't find test file
 
 ```r
-# Check package installation
+# Check installation
 system.file(package = "WrightFisherSim")
 
-# Use local file if needed
+# Use local file
 results <- wright_fisher_sim(
-  demes_file = "dev/deme_test.yml",  # Local path
+  demes_file = "dev/deme_test.yml",  # or full path
   initial_frequency = 0.8,
-  mutation_rate = 0.001,
-  seed = 42
+  mutation_rate = 0.001
 )
 ```
 
-### Correct Installation Order
+---
 
-1. Install R package from GitHub
-2. Restart R
+## Installation Order (Important!)
+
+**Correct order:**
+1. Install R package
+2. **Restart R**
 3. Install Python packages
-4. Restart R again
-5. Use the package
+4. **Restart R**
+5. Use package
 
-### What NOT to Do
-
-- Don't install Python packages after loading the package
-- Don't skip restarting R
-- Don't try to use the package immediately after installing Python packages
-
+**Common mistakes:**
+- Installing Python packages after loading the library
+- Not restarting R between steps
+- Trying to use immediately after Python install
 
 ---
 
