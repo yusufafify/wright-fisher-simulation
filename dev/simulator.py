@@ -4,71 +4,99 @@ import math
 from collections import Counter
 import yaml
 
+
 class WrightFisherSim:
     def __init__(self, demes_file_path, config_file_path=None, alleles=None, initial_allele_frequency=0.5, 
                  mutation_rate=0.0, wild_type=0, seed=None, selection_coefficients=None):
 
         # Load the graph using demes library
         self.graph = demes.load(demes_file_path)
-        # Load the configuration file if provided
-        self.config = {}
-        self.new_alleles_config = []
-        if config_file_path:
-            with open(config_file_path, 'r') as file:
-                self.config = yaml.safe_load(file)
-            # Extract new alleles configuration if present
-            self.new_alleles_config = self.config.get("new_alleles", [])
-        # If no new alleles config is provided, use an empty list
-                
-        #index by generation for first lookup
-        self.alleles_by_time = {}
-        for entry in self.new_alleles_config:
-            required_fields = {"allele", "population", "start_time"}
-            if not required_fields.issubset(entry):
-                raise ValueError(f"New allele entry missing required fields: {required_fields}")
-            t = int(entry["start_time"])
-            self.alleles_by_time.setdefault(t,[]).append(entry)
-
+        
         if seed is not None:
             random.seed(seed)
             
-        self.alleles= alleles if alleles else [0, 1]
-        
-        # -- Selection Feature --
-        self.selection_coefficients = selection_coefficients if selection_coefficients else {}
+        # 1. Capture ALL potential alleles passed by the user
+        all_potential_alleles = alleles if alleles else [0, 1]
 
+        # 2. Parse Config
+        self.config = {}
+        self.new_alleles_config = []
+        self.alleles_by_time = {}
+        
+        # Identify which alleles are "Future/New"
+        future_alleles_set = set()
+
+        if config_file_path:
+            with open(config_file_path, 'r') as file:
+                self.config = yaml.safe_load(file)
+            self.new_alleles_config = self.config.get("new_alleles", [])
+            
+            for entry in self.new_alleles_config:
+                required_fields = {"allele", "population", "start_time"}
+                if not required_fields.issubset(entry):
+                    raise ValueError(f"New allele entry missing required fields: {required_fields}")
+                
+                # Validate that the allele in config is in the alleles array
+                config_allele = entry["allele"]
+                if config_allele not in all_potential_alleles:
+                    raise ValueError(
+                        f"Error: Allele '{config_allele}' is defined in the config file but not in the alleles array. "
+                        f"Please add '{config_allele}' to the alleles parameter when creating the simulator.\n"
+                        f"Current alleles: {all_potential_alleles}"
+                    )
+                
+                t = int(entry["start_time"])
+                self.alleles_by_time.setdefault(t,[]).append(entry)
+                future_alleles_set.add(entry["allele"])
+
+
+        # 3. Define ACTIVE alleles (Start Gen) vs Future Alleles
+        # We remove future alleles from the active list so they aren't generated at Gen 100
+        self.alleles = [a for a in all_potential_alleles if a not in future_alleles_set]
+        
+        # Validation: Ensure we still have at least one allele (Wild Type)
+        if not self.alleles:
+             if wild_type in all_potential_alleles:
+                 self.alleles = [wild_type]
+             else:
+                 self.alleles = [0]
+
+        # 4. Pre-calculate Fitness for EVERYONE (Active + Future)
+        self.selection_coefficients = selection_coefficients if selection_coefficients else {}
         self.fitness = {}
-        for allele in self.alleles:
+        for allele in all_potential_alleles:
             s = self.selection_coefficients.get(allele, 0.0)
             self.fitness[allele] = max(0.0, 1.0 + s)
 
+        # 5. Set Initial Frequencies (Only for Active Alleles)
         if initial_allele_frequency is not None:
             if isinstance(initial_allele_frequency, dict):
-             self.initial_freqs = initial_allele_frequency
+                 self.initial_freqs = {k: v for k, v in initial_allele_frequency.items() if k in self.alleles}
             else:
                 if len(self.alleles) != 2:
-                 raise ValueError("Single float initial frequency can only be used for 2 alleles.")
-                self.initial_freqs = {
-                    self.alleles[0]: initial_allele_frequency,
-                    self.alleles[1]: 1.0 - initial_allele_frequency
-                }
- 
+                    if len(self.alleles) == 1:
+                        self.initial_freqs = {self.alleles[0]: 1.0}
+                    else:
+                        self.initial_freqs = {a: 1.0 / len(self.alleles) for a in self.alleles}
+                else:
+                    self.initial_freqs = {
+                        self.alleles[0]: initial_allele_frequency,
+                        self.alleles[1]: 1.0 - initial_allele_frequency
+                    }
         else:
             self.initial_freqs={a: 1.0 / len(self.alleles) for a in self.alleles}
         
+        # Validate sums
         total = sum(self.initial_freqs.values())
         if not math.isclose(total, 1.0):
-            raise ValueError("Initial allele frequencies must sum to 1.")
+             factor = 1.0 / total
+             self.initial_freqs = {k: v*factor for k,v in self.initial_freqs.items()}
 
-        # Mutation parameters
         self.mutation_rate = mutation_rate
         self.wild_type = wild_type
-        
-        # Track active populations (name -> list of alleles)
         self.current_populations = {}
-        
-        # Track frequency history for plotting
         self.history = {}
+
         print("loaded new alleles config:")
         for c in self.new_alleles_config:
             print(f"  {c['allele']} in {c['population']} at {c['start_time']}")
@@ -250,99 +278,87 @@ class WrightFisherSim:
                     population[i] = self.wild_type
 
     def run(self):
-        # Determine the simulation start time.
-        # Demes uses Infinity for root populations, so we need to find the 
-        # oldest finite time (e.g. a split) and add a buffer.
-        start_times = [p.start_time for p in self.graph.demes]
-        finite_times = [t for t in start_times if not math.isinf(t)]
-        
-        if not finite_times:
-            start_generation = 100 
-        else:
-            # Start 50 generations before the first recorded event
-            start_generation = int(max(finite_times) + 50)
-        
-        print(f"Simulation running from generation {start_generation} to 0...")
-        # --- FIX: Pre-define a zero-frequency dict for extinction events ---
-        # This ensures the history list is always [dict, dict, ...], never mixed with int.
-        zero_freqs = {a: 0.0 for a in self.alleles}
+            start_times = [p.start_time for p in self.graph.demes]
+            finite_times = [t for t in start_times if not math.isinf(t)]
+            
+            if not finite_times:
+                start_generation = 100 
+            else:
+                start_generation = int(max(finite_times) + 50)
+            
+            print(f"Simulation running from generation {start_generation} to 0...")
 
-        # Iterate backwards from past to present
-        for t in range(start_generation, -1, -1):
-
-            # Handle population creation (Births)
-            for pop in self.graph.demes:
-                # Check if the population starts at this specific generation
-                is_finite_start = (not math.isinf(pop.start_time)) and (int(pop.start_time) == t)
-                # Force the root population to start at the beginning of our sim
-                is_root_start = math.isinf(pop.start_time) and (t == start_generation)
+            for t in range(start_generation, -1, -1):
                 
-                if is_finite_start or is_root_start:
-                    if pop.name not in self.current_populations:
-                        # We use the explicit start_size from the epoch definition
-                        # to avoid getting 0 from size_at(t) at the exact boundary.
-                        initial_size = pop.epochs[0].start_size
-                        
-                        # Pass the lists for ancestors and proportions to handle merges
-                        ancestors = pop.ancestors
-                        proportions = pop.proportions
-                        
-                        self._initialize_population(pop.name, initial_size, ancestors, proportions)
+                # --- 1. Update Zero Frequencies (Critical for dynamic alleles) ---
+                zero_freqs = {a: 0.0 for a in self.alleles}
 
-            self._handle_new_alleles(t)
+                # --- 2. Handle Births (Demes logic) ---
+                for pop in self.graph.demes:
+                    is_finite_start = (not math.isinf(pop.start_time)) and (int(pop.start_time) == t)
+                    is_root_start = math.isinf(pop.start_time) and (t == start_generation)
+                    
+                    if is_finite_start or is_root_start:
+                        if pop.name not in self.current_populations:
+                            initial_size = pop.epochs[0].start_size
+                            ancestors = pop.ancestors
+                            proportions = pop.proportions
+                            self._initialize_population(pop.name, initial_size, ancestors, proportions)
 
-            # Evolution Step (Wright-Fisher)
-            # Iterate over a list of keys to allow dictionary modification if needed
-            for pop_name in list(self.current_populations.keys()):
-                
-                # We query the size slightly inside the interval (t - epsilon)
-                # to ensure we get the valid size for the current generation.
-                query_time = max(0, t - 1e-5)
-                current_size = int(self.graph[pop_name].size_at(query_time))
-                
-                # Handle extinction or empty populations
-                if current_size <= 0:
-                    self.current_populations[pop_name] = []
-                    # FIX: Append dictionary instead of 0
-                    self.history[pop_name].append(zero_freqs.copy())
-                    continue
+                # --- 3. Introduce New Alleles (Config) ---
+                self._handle_new_alleles(t)
 
-                old_alleles = self.current_populations[pop_name]
-                
-                if not old_alleles:
-                    # FIX: Append dictionary instead of 0
-                    self.history[pop_name].append(zero_freqs.copy())
-                    continue
+                # --- 4. EVOLUTION LOOP (Selection & Mutation) ---
+                for pop_name in list(self.current_populations.keys()):
+                    
+                    query_time = max(0, t - 1e-5)
+                    current_size = int(self.graph[pop_name].size_at(query_time))
+                    
+                    # Check for extinction or empty size
+                    if current_size <= 0:
+                        self.current_populations[pop_name] = []
+                        # We do NOT append history here anymore to avoid double counting.
+                        # The 'Stats Loop' below handles the logging.
+                        continue
 
-                # --- SELECTION IMPLEMENTATION ---
-                # 1. Build weights based on the fitness of each individual's allele
-                weights = [self.fitness[allele] for allele in old_alleles]
-                
-                # Check for total extinction (if all fitnesses are 0)
-                if sum(weights) == 0:
-                    self.current_populations[pop_name] = []
-                    # FIX: Append dictionary instead of 0
-                    self.history[pop_name].append(zero_freqs.copy())
-                    continue
+                    old_alleles = self.current_populations[pop_name]
+                    
+                    if not old_alleles:
+                        continue
 
-                # 2. Weighted Sampling (Biased by fitness)
-                new_alleles = random.choices(
-                    population=old_alleles,
-                    weights=weights,
-                    k=current_size
-                )
-                self.current_populations[pop_name] = new_alleles
-                # --- SELECTION IMPLEMENTATION END ---
-                
-                # Apply mutations
-                self._handle_mutations(pop_name)
-                
-                # Save frequency data
-                counts = Counter(self.current_populations[pop_name])
-                freqs = {a: counts.get(a, 0) / len(self.current_populations[pop_name]) for a in self.alleles}
-                self.history[pop_name].append(freqs)
-            # Migration and Pulse Steps
-            self._handle_migration(t)
-            self._handle_pulses(t)
+                    # A. Selection
+                    weights = [self.fitness[allele] for allele in old_alleles]
+                    
+                    if sum(weights) == 0:
+                        self.current_populations[pop_name] = []
+                        continue
 
-        return self.history
+                    new_alleles = random.choices(
+                        population=old_alleles,
+                        weights=weights,
+                        k=current_size
+                    )
+                    self.current_populations[pop_name] = new_alleles
+                    
+                    # B. Mutation
+                    self._handle_mutations(pop_name)
+
+                # --- 5. MIGRATION LOOP (Applied to the new generation) ---
+                # Moves individuals between populations BEFORE we take the census
+                self._handle_migration(t)
+                self._handle_pulses(t)
+
+                # --- 6. STATS LOOP (Census) ---
+                # Record the final state of the population for this generation
+                for pop_name in list(self.current_populations.keys()):
+                    pop_data = self.current_populations[pop_name]
+                    
+                    # Handle empty/extinct populations safely
+                    if not pop_data:
+                        self.history[pop_name].append(zero_freqs.copy())
+                    else:
+                        counts = Counter(pop_data)
+                        freqs = {a: counts.get(a, 0) / len(pop_data) for a in self.alleles}
+                        self.history[pop_name].append(freqs)
+
+            return self.history
