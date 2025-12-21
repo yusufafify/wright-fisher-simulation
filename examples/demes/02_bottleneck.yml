@@ -1,0 +1,16 @@
+description: Population bottleneck scenario
+time_units: generations
+
+demes:
+  - name: Population
+    start_time: .inf
+    epochs:
+      # Ancient large population
+      - start_size: 10000
+        end_time: 100
+      # Bottleneck period (drastic reduction)
+      - start_size: 50
+        end_time: 50
+      # Recovery to intermediate size
+      - start_size: 1000
+        end_time: 0

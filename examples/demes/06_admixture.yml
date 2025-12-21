@@ -1,0 +1,33 @@
+description: Admixture event (pulse migration)
+time_units: generations
+
+demes:
+  # Ancestral population
+  - name: Ancestral
+    start_time: .inf
+    epochs:
+      - start_size: 5000
+        end_time: 300
+  
+  # Population A (main lineage)
+  - name: Pop_A
+    ancestors: [Ancestral]
+    start_time: 300
+    epochs:
+      - start_size: 5000
+        end_time: 0
+  
+  # Population B (diverged lineage)
+  - name: Pop_B
+    ancestors: [Ancestral]
+    start_time: 300
+    epochs:
+      - start_size: 2000
+        end_time: 0
+
+# Single admixture event: 20% of Pop_A comes from Pop_B at generation 100
+pulses:
+  - source: Pop_B
+    dest: Pop_A
+    proportion: 0.2
+    time: 100

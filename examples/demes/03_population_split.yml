@@ -1,0 +1,26 @@
+description: Population split (speciation/divergence)
+time_units: generations
+
+demes:
+  # Ancestral population
+  - name: Ancestral
+    start_time: .inf
+    epochs:
+      - start_size: 5000
+        end_time: 200
+  
+  # Population A (derived from Ancestral)
+  - name: Pop_A
+    ancestors: [Ancestral]
+    start_time: 200
+    epochs:
+      - start_size: 5000
+        end_time: 0
+  
+  # Population B (derived from Ancestral)
+  - name: Pop_B
+    ancestors: [Ancestral]
+    start_time: 200
+    epochs:
+      - start_size: 5000
+        end_time: 0

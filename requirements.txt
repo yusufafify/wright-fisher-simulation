@@ -1,0 +1,6 @@
+demes
+matplotlib
+numpy
+scipy
+setuptools
+
