@@ -31,7 +31,6 @@ reticulate::py_install(c("demes", "matplotlib", "numpy"), pip = TRUE)
 
 ```r
 library(WrightFisherSim)
-
 # Run a simulation
 results <- wright_fisher_sim(
   demes_file = system.file("dev/deme_test.yml", package = "WrightFisherSim"),
@@ -103,6 +102,7 @@ ggsave("output.png", p, width = 10, height = 6)
 This means Python packages aren't installed.
 
 **Fix:**
+
 1. Restart R
 2. Run: `reticulate::py_install(c("demes", "matplotlib", "numpy"), pip = TRUE)`
 3. Restart R again
@@ -113,6 +113,7 @@ This means Python packages aren't installed.
 This was fixed in recent versions.
 
 **Fix:**
+
 1. Update to latest version: `devtools::install_github("yusufafify/wright-fisher-simulation", force = TRUE)`
 2. Restart R
 
@@ -135,6 +136,7 @@ results <- wright_fisher_sim(
 ## Installation Order (Important!)
 
 **Correct order:**
+
 1. Install R package
 2. **Restart R**
 3. Install Python packages
@@ -142,6 +144,7 @@ results <- wright_fisher_sim(
 5. Use package
 
 **Common mistakes:**
+
 - Installing Python packages after loading the library
 - Not restarting R between steps
 - Trying to use immediately after Python install
@@ -176,7 +179,6 @@ plot_wright_fisher(results)
 ## Detailed Usage
 
 ### Basic Simulation
-
 
 ```r
 # Simulation without mutations (pure drift)
@@ -238,6 +240,7 @@ summary(results)
 Run a Wright-Fisher simulation with optional mutations.
 
 **Parameters:**
+
 - `demes_file`: Path to Demes YAML file
 - `initial_frequency`: Initial wild-type frequency (0-1)
 - `mutation_rate`: Per-generation mutation probability (0-1)
@@ -251,6 +254,7 @@ Run a Wright-Fisher simulation with optional mutations.
 Visualize simulation results.
 
 **Parameters:**
+
 - `results`: Output from `wright_fisher_sim()`
 - `title`: Plot title
 - `show_params`: Show parameters in subtitle
@@ -262,6 +266,7 @@ Visualize simulation results.
 Manually configure Python environment (usually not needed).
 
 **Parameters:**
+
 - `python_path`: Optional path to Python executable
 
 ## Examples
@@ -293,7 +298,7 @@ demes:
     epochs:
       - start_size: 100
         end_time: 50
-        
+      
   - name: Pop_A
     ancestors: [Ancestral]
     start_time: 50

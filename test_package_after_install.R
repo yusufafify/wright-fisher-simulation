@@ -2,6 +2,7 @@
 # Run this after: devtools::install_github("yusufafify/wright-fisher-simulation")
 
 library(WrightFisherSim)
+library(ggplot2) # For saving plots
 
 # Test file path
 test_file <- system.file("dev/deme_test.yml", package = "WrightFisherSim")

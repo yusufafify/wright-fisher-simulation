@@ -1,6 +1,7 @@
 # Wright-Fisher Simulation Examples in R
 
 library(WrightFisherSim)
+library(ggplot2) # For saving plots with ggsave
 
 # Example 1: Basic simulation without mutations
 # ----------------------------------------------
@@ -19,6 +20,10 @@ summary(results1)
 # Plot results
 p1 <- plot_wright_fisher(results1, title = "Pure Genetic Drift")
 print(p1)
+
+# Save plot
+ggsave("example1_drift.png", p1, width = 10, height = 6)
+cat("✓ Saved plot to example1_drift.png\n")
 
 
 # Example 2: With mutations
@@ -43,6 +48,10 @@ p2 <- plot_wright_fisher(
 )
 print(p2)
 
+# Save plot
+ggsave("example2_mutation.png", p2, width = 10, height = 6)
+cat("✓ Saved plot to example2_mutation.png\n")
+
 
 # Example 3: Comparing scenarios
 # -------------------------------
@@ -65,11 +74,18 @@ with_mut <- wright_fisher_sim(
 )
 
 # Create comparison plots
-library(gridExtra)
 p_no_mut <- plot_wright_fisher(no_mut, title = "No Mutations")
 p_with_mut <- plot_wright_fisher(with_mut, title = "With Mutations (μ=0.01)")
 
-grid.arrange(p_no_mut, p_with_mut, ncol = 2)
+# Display plots side by side (requires gridExtra package)
+if (require(gridExtra, quietly = TRUE)) {
+    combined_plot <- grid.arrange(p_no_mut, p_with_mut, ncol = 2)
+    ggsave("example3_comparison.png", combined_plot, width = 16, height = 6)
+    cat("✓ Saved comparison plot to example3_comparison.png\n")
+} else {
+    cat("Note: Install gridExtra package to create comparison plots\n")
+    cat("  install.packages('gridExtra')\n")
+}
 
 
 # Example 4: Extracting specific population data
@@ -86,3 +102,6 @@ cat(sprintf("\nMean frequency: %.4f\n", mean(unlist(ancestral_freqs))))
 cat(sprintf("SD frequency: %.4f\n", sd(unlist(ancestral_freqs))))
 cat(sprintf("Min frequency: %.4f\n", min(unlist(ancestral_freqs))))
 cat(sprintf("Max frequency: %.4f\n", max(unlist(ancestral_freqs))))
+
+cat("\n✓ All examples completed!\n")
+cat("Check the current directory for saved plots.\n")
