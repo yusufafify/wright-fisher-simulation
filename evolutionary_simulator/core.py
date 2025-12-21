@@ -374,33 +374,41 @@ def plot_results(results):
                         population names and their allele frequency lists.
     """
     plt.figure(figsize=(14, 7))
+    total_generations = max(len(v) for v in results.values())
 
-    # Plot each population
     for pop_name, freq_history in results.items():
         if not freq_history:
             continue
 
-        generations = range(len(freq_history))
+        start_generation = total_generations - len(freq_history)
+        # Correct biological generation axis
+        generations = range(start_generation, total_generations)
 
-        # Get all alleles ever seen in this population
-        alleles = set()
+        # Collect all alleles ever seen
+        all_alleles = set()
         for gen in freq_history:
-            alleles.update(gen.keys())
+            all_alleles.update(gen.keys())
 
-        # Plot each allele separately
-        for allele in sorted(alleles):
-            allele_freqs = [
-                gen.get(allele, 0.0) for gen in freq_history
-            ]
+        for allele in sorted(all_alleles):
+            allele_freqs = []
+            allele_started = False
+
+            for gen in freq_history:
+                if allele in gen:
+                    allele_started = True
+                    allele_freqs.append(gen[allele])
+                else:
+                    allele_freqs.append(math.nan)
+
             plt.plot(
                 generations,
                 allele_freqs,
-                label=f"{pop_name} – allele {allele}"
+                label=f"{pop_name} – allele {allele}",
+                linewidth=2
             )
 
-    # Labels & styling
-    plt.title("Wright–Fisher Simulation (Multiple Alleles)")
-    plt.xlabel("Generation (forward in time)")
+    plt.title("Wright–Fisher Simulation  (Mutltiple Alleles)")
+    plt.xlabel("Generation (past → present)")
     plt.ylabel("Allele Frequency")
     plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
     plt.grid(True, alpha=0.3)
