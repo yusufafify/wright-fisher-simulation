@@ -4,7 +4,8 @@ import math
 import matplotlib.pyplot as plt
 
 class WrightFisherSim:
-    def __init__(self, demes_file_path, initial_allele_frequency=0.5, seed=None):
+    def __init__(self, demes_file_path, initial_allele_frequency=0.5, 
+                 mutation_rate=0.0, wild_type=0, seed=None):
         # Load the graph using demes library
         self.graph = demes.load(demes_file_path)
         
@@ -12,6 +13,10 @@ class WrightFisherSim:
             random.seed(seed)
             
         self.initial_freq = initial_allele_frequency
+        
+        # Mutation parameters
+        self.mutation_rate = mutation_rate
+        self.wild_type = wild_type  # 0 = wild-type, 1 = mutant
         
         # Track active populations (name -> list of alleles)
         self.current_populations = {}
@@ -140,6 +145,28 @@ class WrightFisherSim:
                         random_idx = random.randint(0, len(dest_pop) - 1)
                         dest_pop[random_idx] = m
 
+    def _handle_mutations(self, pop_name):
+        """
+        Apply mutations to a population.
+        Supports:
+        - Forward mutations: wild-type (0) -> mutant (1)
+        - Backward mutations: mutant (1) -> wild-type (0)
+        """
+        if self.mutation_rate <= 0:
+            return
+        
+        population = self.current_populations[pop_name]
+        
+        for i in range(len(population)):
+            if random.random() < self.mutation_rate:
+                # Toggle allele: if wild-type, mutate to 1; if mutant, mutate back to 0
+                if population[i] == self.wild_type:
+                    # Forward mutation: wild-type -> mutant
+                    population[i] = 1 if self.wild_type == 0 else 0
+                else:
+                    # Backward mutation: mutant -> wild-type
+                    population[i] = self.wild_type
+
     def run(self):
         # Determine the simulation start time.
         # Demes uses Infinity for root populations, so we need to find the 
@@ -202,8 +229,11 @@ class WrightFisherSim:
                 new_alleles = [random.choice(old_alleles) for _ in range(current_size)]
                 self.current_populations[pop_name] = new_alleles
                 
+                # Apply mutations
+                self._handle_mutations(pop_name)
+                
                 # Save frequency data
-                freq = sum(new_alleles) / len(new_alleles)
+                freq = sum(self.current_populations[pop_name]) / len(self.current_populations[pop_name]) # Calculate allele frequency
                 self.history[pop_name].append(freq)
 
             # Migration and Pulse Steps
