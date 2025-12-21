@@ -37,14 +37,33 @@ utils::globalVariables(c("Generation", "Frequency", "Population"))
 #' setup_python()
 #' }
 setup_python <- function(python_path = NULL) {
+    # Configure Python before it initializes
     if (!is.null(python_path)) {
         reticulate::use_python(python_path, required = TRUE)
     }
 
-    # Check if Python packages are installed
-    if (!reticulate::py_module_available("demes")) {
-        message("Installing required Python packages...")
-        reticulate::py_install(c("demes", "matplotlib", "numpy"))
+    # Check and install Python packages BEFORE importing anything
+    # This must happen before Python initializes
+    required_packages <- c("demes", "matplotlib", "numpy")
+
+    for (pkg in required_packages) {
+        if (!reticulate::py_module_available(pkg)) {
+            message("Installing Python package: ", pkg)
+            tryCatch(
+                {
+                    reticulate::py_install(pkg, pip = TRUE)
+                },
+                error = function(e) {
+                    warning(
+                        "Could not install ", pkg, " automatically. ",
+                        "Please install manually:\n",
+                        "  reticulate::py_install(c('demes', 'matplotlib', 'numpy'))\n",
+                        "Or in Python:\n",
+                        "  pip install demes matplotlib numpy"
+                    )
+                }
+            )
+        }
     }
 
     # Get package installation path
@@ -55,7 +74,7 @@ setup_python <- function(python_path = NULL) {
         pkg_path <- getwd()
     }
 
-    # Add package path to Python sys.path so it can find evolutionary_simulator
+    # Import sys and add package path
     sys <- reticulate::import("sys", convert = TRUE)
 
     # The evolutionary_simulator module is in inst/ which becomes the package root
@@ -67,13 +86,19 @@ setup_python <- function(python_path = NULL) {
     tryCatch(
         {
             .wright_fisher_py <<- reticulate::import("evolutionary_simulator.core")
+            message("✓ Python environment initialized successfully")
         },
         error = function(e) {
             stop(
-                "Failed to import evolutionary_simulator module. ",
-                "Make sure the package is properly installed.\n",
-                "Package path: ", pkg_path, "\n",
-                "Error: ", conditionMessage(e)
+                "\nFailed to import evolutionary_simulator module.\n\n",
+                "Troubleshooting steps:\n",
+                "1. Make sure Python packages are installed:\n",
+                "   reticulate::py_install(c('demes', 'matplotlib', 'numpy'))\n\n",
+                "2. Restart R and try again\n\n",
+                "3. Check package installation:\n",
+                "   Package path: ", pkg_path, "\n",
+                "   Module location: ", pkg_path, "/evolutionary_simulator\n\n",
+                "Original error: ", conditionMessage(e)
             )
         }
     )
