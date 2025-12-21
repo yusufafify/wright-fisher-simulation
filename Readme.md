@@ -79,6 +79,39 @@ Required packages:
 pip install -e .
 ```
 
+### R Installation
+
+The simulator is also available as an R package that wraps the Python implementation.
+
+**Install from GitHub:**
+
+```r
+# Install devtools if needed
+install.packages("devtools")
+
+# Install from GitHub
+devtools::install_github("yusufafify/wright-fisher-simulation")
+```
+
+**R Usage:**
+
+```r
+library(WrightFisherSim)
+
+# Run simulation
+results <- wright_fisher_sim(
+  demes_file = system.file("dev/deme_test.yml", package = "WrightFisherSim"),
+  initial_frequency = 0.8,
+  mutation_rate = 0.001,
+  seed = 42
+)
+
+# Plot results
+plot_wright_fisher(results)
+```
+
+See `R_README.md` for complete R package documentation.
+
 ---
 
 ## Core Concepts
@@ -188,13 +221,13 @@ results = sim.run()
 
 **Constructor Parameters**:
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `demes_file_path` | str | *required* | Path to Demes YAML file |
-| `initial_allele_frequency` | float | 0.5 | Initial frequency of wild-type allele (0.0-1.0) |
-| `mutation_rate` | float | 0.0 | Per-generation mutation probability (0.0-1.0) |
-| `wild_type` | int | 0 | Allele identifier for wild-type |
-| `seed` | int | None | Random seed for reproducibility |
+| Parameter                  | Type  | Default    | Description                                     |
+| -------------------------- | ----- | ---------- | ----------------------------------------------- |
+| `demes_file_path`          | str   | *required* | Path to Demes YAML file                         |
+| `initial_allele_frequency` | float | 0.5        | Initial frequency of wild-type allele (0.0-1.0) |
+| `mutation_rate`            | float | 0.0        | Per-generation mutation probability (0.0-1.0)   |
+| `wild_type`                | int   | 0          | Allele identifier for wild-type                 |
+| `seed`                     | int   | None       | Random seed for reproducibility                 |
 
 **Methods**:
 
@@ -212,10 +245,10 @@ results = sim.run()
 
 **Additional Parameters**:
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `alleles` | list | [0, 1] | List of allele identifiers |
-| `initial_allele_frequency` | dict | None | Dictionary mapping alleles to frequencies |
+| Parameter                  | Type | Default | Description                               |
+| -------------------------- | ---- | ------- | ----------------------------------------- |
+| `alleles`                  | list | [0, 1]  | List of allele identifiers                |
+| `initial_allele_frequency` | dict | None    | Dictionary mapping alleles to frequencies |
 
 **Returns**: Dictionary with frequency dictionaries for each generation:
 ```python
@@ -439,12 +472,12 @@ At equilibrium under mutation and drift:
 
 ### Recommended Mutation Rates
 
-| Organism | Per-base mutation rate (μ) |
-|----------|---------------------------|
-| Bacteria | 10⁻⁹ to 10⁻¹⁰ |
-| Humans | ~10⁻⁸ |
-| Drosophila | ~10⁻⁸ |
-| RNA viruses | 10⁻³ to 10⁻⁵ |
+| Organism    | Per-base mutation rate (μ) |
+| ----------- | -------------------------- |
+| Bacteria    | 10⁻⁹ to 10⁻¹⁰              |
+| Humans      | ~10⁻⁸                      |
+| Drosophila  | ~10⁻⁸                      |
+| RNA viruses | 10⁻³ to 10⁻⁵               |
 
 For **effective locus-level rates**, multiply by number of mutable sites.
 
@@ -535,12 +568,12 @@ plt.savefig('output.png')  # Save instead of show
 
 ## Team Members
 
-| Name | ID |
-|------|-----|
+| Name                | ID      |
+| ------------------- | ------- |
 | Youssef Ahmed Afify | 1200883 |
-| Hamza Ayman | 1210218 |
-| Hamsa Saber | 1210359 |
-| Salsabeel Mostafa | 1210171 |
+| Hamza Ayman         | 1210218 |
+| Hamsa Saber         | 1210359 |
+| Salsabeel Mostafa   | 1210171 |
 
 ---
 
