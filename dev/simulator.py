@@ -4,7 +4,7 @@ import math
 from collections import Counter
 
 class WrightFisherSim:
-    def __init__(self, demes_file_path, alleles=None, initial_allele_frequency=0.5, seed=None):
+    def __init__(self, demes_file_path, alleles=None, initial_allele_frequency=0.5, seed=None, selection_coefficients=None):
         # Load the graph using demes library
         self.graph = demes.load(demes_file_path)
         
@@ -12,6 +12,14 @@ class WrightFisherSim:
             random.seed(seed)
             
         self.alleles= alleles if alleles else [0, 1]
+
+        # -- Selection Feature --
+        self.selection_coefficients = selection_coefficients if selection_coefficients else {}
+
+        self.fitness = {}
+        for allele in self.alleles:
+            s = self.selection_coefficients.get(allele, 0.0)
+            self.fitness[allele] = max(0.0, 1.0 + s)
         
         if initial_allele_frequency is not None:
             self.initial_freqs = initial_allele_frequency
@@ -164,6 +172,9 @@ class WrightFisherSim:
             start_generation = int(max(finite_times) + 50)
         
         print(f"Simulation running from generation {start_generation} to 0...")
+        # --- FIX: Pre-define a zero-frequency dict for extinction events ---
+        # This ensures the history list is always [dict, dict, ...], never mixed with int.
+        zero_freqs = {a: 0.0 for a in self.alleles}
 
         # Iterate backwards from past to present
         for t in range(start_generation, -1, -1):
@@ -199,18 +210,36 @@ class WrightFisherSim:
                 # Handle extinction or empty populations
                 if current_size <= 0:
                     self.current_populations[pop_name] = []
-                    self.history[pop_name].append(0)
+                    # FIX: Append dictionary instead of 0
+                    self.history[pop_name].append(zero_freqs.copy())
                     continue
 
                 old_alleles = self.current_populations[pop_name]
                 
                 if not old_alleles:
-                    self.history[pop_name].append(0)
+                    # FIX: Append dictionary instead of 0
+                    self.history[pop_name].append(zero_freqs.copy())
                     continue
 
-                # Random sampling with replacement
-                new_alleles = [random.choice(old_alleles) for _ in range(current_size)]
+                # --- SELECTION IMPLEMENTATION ---
+                # 1. Build weights based on the fitness of each individual's allele
+                weights = [self.fitness[allele] for allele in old_alleles]
+                
+                # Check for total extinction (if all fitnesses are 0)
+                if sum(weights) == 0:
+                    self.current_populations[pop_name] = []
+                    # FIX: Append dictionary instead of 0
+                    self.history[pop_name].append(zero_freqs.copy())
+                    continue
+
+                # 2. Weighted Sampling (Biased by fitness)
+                new_alleles = random.choices(
+                    population=old_alleles,
+                    weights=weights,
+                    k=current_size
+                )
                 self.current_populations[pop_name] = new_alleles
+                # --- SELECTION IMPLEMENTATION END ---
                 
                 # Save frequency data
                 counts = Counter(new_alleles)
