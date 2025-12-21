@@ -8,7 +8,7 @@
 #' @name WrightFisherSim-package
 #' @aliases WrightFisherSim
 #' @import reticulate
-#' @importFrom ggplot2 ggplot aes geom_line labs scale_y_continuous theme_minimal theme element_text
+#' @importFrom ggplot2 ggplot aes geom_line labs scale_y_continuous theme_minimal theme element_text ggsave
 #' @importFrom utils head
 NULL
 
