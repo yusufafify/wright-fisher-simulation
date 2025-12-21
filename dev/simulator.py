@@ -65,7 +65,8 @@ class WrightFisherSim:
                     
                     # Safety check to prevent crashing on empty ancestors
                     if not source_pop:
-                        new_pop_alleles.extend([0] * count)
+                        # --- FIX: Use self.wild_type instead of hardcoded 0 ---
+                        new_pop_alleles.extend([self.wild_type] * count)
                     else:
                         new_pop_alleles.extend([random.choice(source_pop) for _ in range(count)])
             
