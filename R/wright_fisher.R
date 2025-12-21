@@ -15,13 +15,13 @@ NULL
 # Declare global variables to avoid R CMD check NOTEs
 utils::globalVariables(c("Generation", "Frequency", "Population"))
 
-# Global reference to Python module
-.wright_fisher_py <- NULL
+# Package environment to store Python module reference
+.pkg_env <- new.env(parent = emptyenv())
+.pkg_env$wright_fisher_py <- NULL
 
 #' @keywords internal
 .onLoad <- function(libname, pkgname) {
-    # Use superassignment to update global reference
-    .wright_fisher_py <<- NULL
+    .pkg_env$wright_fisher_py <- NULL
 }
 
 #' Initialize Python Environment
@@ -85,7 +85,8 @@ setup_python <- function(python_path = NULL) {
     # Try to import the module
     tryCatch(
         {
-            .wright_fisher_py <<- reticulate::import("evolutionary_simulator.core")
+            # Store in package environment instead of using locked binding
+            .pkg_env$wright_fisher_py <- reticulate::import("evolutionary_simulator.core")
             message("✓ Python environment initialized successfully")
         },
         error = function(e) {
@@ -144,7 +145,7 @@ wright_fisher_sim <- function(demes_file,
                               wild_type = 0L,
                               seed = NULL) {
     # Initialize Python if needed
-    if (is.null(.wright_fisher_py)) {
+    if (is.null(.pkg_env$wright_fisher_py)) {
         setup_python()
     }
 
@@ -167,7 +168,7 @@ wright_fisher_sim <- function(demes_file,
     }
 
     # Create simulator instance
-    sim <- .wright_fisher_py$WrightFisherSim(
+    sim <- .pkg_env$wright_fisher_py$WrightFisherSim(
         demes_file_path = demes_file,
         initial_allele_frequency = initial_frequency,
         mutation_rate = mutation_rate,
