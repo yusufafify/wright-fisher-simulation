@@ -374,20 +374,35 @@ def plot_results(results):
                         population names and their allele frequency lists.
     """
     plt.figure(figsize=(14, 7))
-    total_generations = max(len(v) for v in results.values())
 
-    # Plot Each Population
-    for pop_name, frequencies in results.items():
-        # Calculate x-axis alignment so all populations end at the "Present"
-        start_gen = total_generations - len(frequencies)
-        x_axis = range(start_gen, total_generations)
-        
-        plt.plot(x_axis, frequencies, label=pop_name, linewidth=2)
+    # Plot each population
+    for pop_name, freq_history in results.items():
+        if not freq_history:
+            continue
 
-    # Labels and Show
-    plt.title("Wright-Fisher Simulation Results")
-    plt.xlabel("Generations")
+        generations = range(len(freq_history))
+
+        # Get all alleles ever seen in this population
+        alleles = set()
+        for gen in freq_history:
+            alleles.update(gen.keys())
+
+        # Plot each allele separately
+        for allele in sorted(alleles):
+            allele_freqs = [
+                gen.get(allele, 0.0) for gen in freq_history
+            ]
+            plt.plot(
+                generations,
+                allele_freqs,
+                label=f"{pop_name} – allele {allele}"
+            )
+
+    # Labels & styling
+    plt.title("Wright–Fisher Simulation (Multiple Alleles)")
+    plt.xlabel("Generation (forward in time)")
     plt.ylabel("Allele Frequency")
-    plt.legend()
+    plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left")
     plt.grid(True, alpha=0.3)
+    plt.tight_layout()
     plt.show()
