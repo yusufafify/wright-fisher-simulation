@@ -1,0 +1,30 @@
+
+description: Task 3 Test
+time_units: generations
+defaults:
+  epoch:
+    start_size: 100
+demes:
+  - name: Ancestral
+    start_time: .inf
+    epochs:
+      - start_size: 100
+        end_time: 50
+  - name: Pop_A
+    ancestors: [Ancestral]
+    start_time: 50
+    epochs:
+      - start_size: 100
+        end_size: 500
+  - name: Pop_B
+    ancestors: [Ancestral]
+    start_time: 50
+    epochs:
+      - start_size: 100
+        end_size: 20
+migrations:
+  - source: Pop_A
+    dest: Pop_B
+    rate: 0.05
+    start_time: 40
+    end_time: 10

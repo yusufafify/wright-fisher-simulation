@@ -1,0 +1,15 @@
+description: Population expansion scenario
+time_units: generations
+
+demes:
+  - name: Population
+    start_time: .inf
+    epochs:
+      # Small founding population
+      - start_size: 100
+        end_time: 200
+      # Exponential growth period
+      - start_size: 100
+        end_size: 10000
+        size_function: exponential
+        end_time: 0

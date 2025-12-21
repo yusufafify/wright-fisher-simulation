@@ -1,0 +1,29 @@
+Package: WrightFisherSim
+Type: Package
+Title: Wright-Fisher Population Genetics Simulator with Mutations
+Version: 1.0.0
+Authors@R: c(
+    person("Youssef Ahmed", "Afify", email = "yafify@example.com", role = c("aut", "cre")),
+    person("Hamza", "Ayman", role = "aut"),
+    person("Hamsa", "Saber", role = "aut"),
+    person("Salsabeel", "Mostafa", role = "aut")
+    )
+Description: A Wright-Fisher model simulator for population genetics that supports 
+    genetic drift, bidirectional mutations, migration, population splits/merges, and 
+    pulse events. Uses the Demes specification for demographic models. This R package
+    provides a wrapper around the Python implementation using reticulate.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports:
+    reticulate (>= 1.20),
+    ggplot2 (>= 3.3.0)
+Suggests:
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+SystemRequirements: Python (>= 3.7), demes, matplotlib, numpy
+RoxygenNote: 7.2.0
+VignetteBuilder: knitr
+URL: https://github.com/yusufafify/wright-fisher-simulation
+BugReports: https://github.com/yusufafify/wright-fisher-simulation/issues

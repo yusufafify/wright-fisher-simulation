@@ -1,0 +1,9 @@
+description: Simple single population (constant size)
+time_units: generations
+
+demes:
+  - name: Population
+    start_time: .inf
+    epochs:
+      - start_size: 1000
+        end_time: 0

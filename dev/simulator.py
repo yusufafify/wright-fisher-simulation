@@ -4,7 +4,8 @@ import math
 from collections import Counter
 
 class WrightFisherSim:
-    def __init__(self, demes_file_path, alleles=None, initial_allele_frequency=0.5, seed=None, selection_coefficients=None):
+    def __init__(self, demes_file_path, alleles=None, initial_allele_frequency=0.5, 
+                 mutation_rate=0.0, wild_type=0, seed=None, selection_coefficients=None):
         # Load the graph using demes library
         self.graph = demes.load(demes_file_path)
         
@@ -12,7 +13,7 @@ class WrightFisherSim:
             random.seed(seed)
             
         self.alleles= alleles if alleles else [0, 1]
-
+        
         # -- Selection Feature --
         self.selection_coefficients = selection_coefficients if selection_coefficients else {}
 
@@ -20,7 +21,7 @@ class WrightFisherSim:
         for allele in self.alleles:
             s = self.selection_coefficients.get(allele, 0.0)
             self.fitness[allele] = max(0.0, 1.0 + s)
-        
+
         if initial_allele_frequency is not None:
             self.initial_freqs = initial_allele_frequency
         else:
@@ -30,6 +31,10 @@ class WrightFisherSim:
         if not math.isclose(total, 1.0):
             raise ValueError("Initial allele frequencies must sum to 1.")
 
+        # Mutation parameters
+        self.mutation_rate = mutation_rate
+        self.wild_type = wild_type
+        
         # Track active populations (name -> list of alleles)
         self.current_populations = {}
         
@@ -158,6 +163,33 @@ class WrightFisherSim:
                         random_idx = random.randint(0, len(dest_pop) - 1)
                         dest_pop[random_idx] = m
 
+    def _handle_mutations(self, pop_name):
+        """
+        Apply mutations to a population.
+        Supports:
+        - Forward mutations: wild-type -> mutant alleles
+        - Backward mutations: mutant alleles -> wild-type
+        """
+        if self.mutation_rate <= 0:
+            return
+        
+        population = self.current_populations[pop_name]
+        mutant_alleles = [a for a in self.alleles if a != self.wild_type]
+        
+        if not mutant_alleles:
+            return
+        
+        for i in range(len(population)):
+            if random.random() < self.mutation_rate:
+                current_allele = population[i]
+                
+                if current_allele == self.wild_type:
+                    # Forward mutation: wild-type -> mutant
+                    population[i] = random.choice(mutant_alleles)
+                else:
+                    # Backward mutation: mutant -> wild-type
+                    population[i] = self.wild_type
+
     def run(self):
         # Determine the simulation start time.
         # Demes uses Infinity for root populations, so we need to find the 
@@ -241,9 +273,12 @@ class WrightFisherSim:
                 self.current_populations[pop_name] = new_alleles
                 # --- SELECTION IMPLEMENTATION END ---
                 
+                # Apply mutations
+                self._handle_mutations(pop_name)
+                
                 # Save frequency data
-                counts = Counter(new_alleles)
-                freqs = {a: counts.get(a, 0) / len(new_alleles) for a in self.alleles}
+                counts = Counter(self.current_populations[pop_name])
+                freqs = {a: counts.get(a, 0) / len(self.current_populations[pop_name]) for a in self.alleles}
                 self.history[pop_name].append(freqs)
             # Migration and Pulse Steps
             self._handle_migration(t)

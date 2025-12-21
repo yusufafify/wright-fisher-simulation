@@ -1,0 +1,62 @@
+description: Island model (multiple populations with symmetric migration)
+time_units: generations
+
+demes:
+  - name: Island_1
+    start_time: .inf
+    epochs:
+      - start_size: 1000
+        end_time: 0
+  
+  - name: Island_2
+    start_time: .inf
+    epochs:
+      - start_size: 1000
+        end_time: 0
+  
+  - name: Island_3
+    start_time: .inf
+    epochs:
+      - start_size: 1000
+        end_time: 0
+
+# Symmetric migration between all islands
+migrations:
+  # Island 1 <-> Island 2
+  - source: Island_1
+    dest: Island_2
+    rate: 0.005
+    start_time: .inf
+    end_time: 0
+  
+  - source: Island_2
+    dest: Island_1
+    rate: 0.005
+    start_time: .inf
+    end_time: 0
+  
+  # Island 1 <-> Island 3
+  - source: Island_1
+    dest: Island_3
+    rate: 0.005
+    start_time: .inf
+    end_time: 0
+  
+  - source: Island_3
+    dest: Island_1
+    rate: 0.005
+    start_time: .inf
+    end_time: 0
+  
+  # Island 2 <-> Island 3
+  - source: Island_2
+    dest: Island_3
+    rate: 0.005
+    start_time: .inf
+    end_time: 0
+  
+  - source: Island_3
+    dest: Island_2
+    rate: 0.005
+    start_time: .inf
+    end_time: 0
