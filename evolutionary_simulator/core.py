@@ -3,6 +3,8 @@ import random
 import math
 import matplotlib.pyplot as plt
 import yaml
+from collections import Counter
+
 
 class WrightFisherSim:
     def __init__(self, demes_file_path, config_file_path=None, alleles=None, initial_allele_frequency=0.5, 
