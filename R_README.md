@@ -2,9 +2,9 @@
 
 R interface for the Wright-Fisher population genetics simulator with mutation support.
 
-## Installation
+## Complete Installation Guide
 
-### From GitHub (Recommended)
+### Step 1: Install the R Package
 
 ```r
 # Install devtools if not already installed
@@ -14,35 +14,105 @@ install.packages("devtools")
 devtools::install_github("yusufafify/wright-fisher-simulation")
 ```
 
-### From Local Source
+**Or from local source:**
 
 ```r
 # Navigate to the package directory, then:
 devtools::install()
 ```
 
-## Prerequisites
+### Step 2: Install Python Dependencies
 
-### R Dependencies
-
-The package automatically installs required R packages:
-- `reticulate` (>= 1.20)
-- `ggplot2` (>= 3.3.0)
-
-### Python Dependencies
-
-The package requires Python 3.7+ with the following packages:
-- `demes`
-- `matplotlib`
-- `numpy`
-
-These will be automatically installed when you first use the package, or you can install them manually:
+**IMPORTANT**: Do this in a FRESH R session (restart R first)
 
 ```r
-reticulate::py_install(c("demes", "matplotlib", "numpy"))
+# Method A: Use the setup script (recommended)
+source(system.file("setup_r_package.R", package = "WrightFisherSim"))
+
+# Method B: Manual installation
+reticulate::py_install(c("demes", "matplotlib", "numpy"), pip = TRUE)
 ```
 
+### Step 3: Restart R
+
+**CRITICAL**: You must restart R after installing Python packages.
+
+- In RStudio: `Session -> Restart R`
+- Or quit and reopen R
+
+### Step 4: Test the Installation
+
+```r
+library(WrightFisherSim)
+
+# Run test
+source(system.file("test_package_after_install.R", package = "WrightFisherSim"))
+```
+
+---
+
+## Troubleshooting
+
+### Problem: "ModuleNotFoundError: No module named 'demes'"
+
+**Solution**:
+
+1. **Restart R completely** (close and reopen)
+2. Install Python packages BEFORE loading the package:
+   ```r
+   # In fresh R session
+   reticulate::py_install(c("demes", "matplotlib", "numpy"), pip = TRUE)
+   ```
+3. **Restart R again**
+4. Load package:
+   ```r
+   library(WrightFisherSim)
+   ```
+
+### Problem: "ephemeral virtual environment" warning
+
+This happens when you try to install Python packages after Python has already initialized.
+
+**Solution**:
+1. Restart R
+2. Install Python packages FIRST (before any library calls)
+3. Then use the package
+
+### Problem: Can't find test file
+
+```r
+# Check package installation
+system.file(package = "WrightFisherSim")
+
+# Use local file if needed
+results <- wright_fisher_sim(
+  demes_file = "dev/deme_test.yml",  # Local path
+  initial_frequency = 0.8,
+  mutation_rate = 0.001,
+  seed = 42
+)
+```
+
+### Correct Installation Order
+
+1. Install R package from GitHub
+2. Restart R
+3. Install Python packages
+4. Restart R again
+5. Use the package
+
+### What NOT to Do
+
+- Don't install Python packages after loading the package
+- Don't skip restarting R
+- Don't try to use the package immediately after installing Python packages
+
+
+---
+
 ## Quick Start
+
+After completing installation and setup:
 
 ```r
 library(WrightFisherSim)
@@ -63,7 +133,9 @@ summary(results)
 plot_wright_fisher(results)
 ```
 
-## Usage
+---
+
+## Detailed Usage
 
 ### Basic Simulation
 
