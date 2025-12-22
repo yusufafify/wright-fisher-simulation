@@ -61,9 +61,7 @@ freqs = {
 Alleles not present in a population automatically receive frequency 0.0.
 
 This guarantees:
-$$
-\sum_{alleles} f = 1
-$$
+∑ f_i = 1  (summed over all alleles i)
 for every population and generation.
 
 ---
