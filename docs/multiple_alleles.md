@@ -28,8 +28,52 @@ This representation allows:
 * Arbitrary allele identities
 
 ---
+## 2. Allele Introduction
+1. Declaring Alleles Explicitly
+Alleles are passed using the alleles argument:
 
-## 2. Active vs Future Alleles
+```python
+sim = WrightFisherSim(
+    demes_file_path="model.yml",
+    config_file_path="config_structure.yml",
+    alleles=["A", "B", "C", "D", "E"]
+)
+```
+This tells the simulator:
+* All alleles that may ever exist
+* Including alleles introduced later during the simulation
+
+2. Initial Allele Frequencies
+Initial allele frequencies apply only to active alleles.
+* Uniform frequencies (default)
+```python
+alleles=["A", "B", "C"]
+```
+Initial frequencies become:
+```ini
+A = 1/3, B = 1/3, C = 1/3
+```
+
+* User-defined frequencies
+```python
+initial_allele_frequency = {
+    "A": 0.7,
+    "B": 0.3
+}
+```
+3. Introducing Alleles During the Simulation
+New alleles are introduced dynamically using the configuration file:
+
+```yaml
+new_alleles:
+  - allele: C
+    population: popA
+    start_time: 60
+    initial_frequency: 0.1
+
+```
+
+## 3. Active vs Future Alleles
 
 The simulator distinguishes between:
 * Active alleles: alleles present at the start of the simulation
@@ -49,7 +93,7 @@ only when specified.
 
 ---
 
-## 3. Allele Frequency Tracking
+## 4. Allele Frequency Tracking
 At each generation, allele frequencies are recorded as:
 
 ```python
@@ -66,7 +110,7 @@ for every population and generation.
 
 ---
 
-## 4. Plotting Considerations
+## 5. Plotting Considerations
 Allele frequencies are plotted **only within the lifespan of a population**.
 
 Alleles are shown only after their introduction time, with missing values
@@ -78,7 +122,7 @@ else:
     allele_freqs.append(math.nan)
 ```
 
-## 5. Mutation with Multiple Alleles
+## 6. Mutation with Multiple Alleles
 Mutation supports both:
 * Forward mutation: wild-type → mutant allele
 * Backward mutation: mutant → wild-type
@@ -92,7 +136,7 @@ else:
 
 ---
 
-## 6. Interaction with Migration
+## 7. Interaction with Migration
 Migration moves individuals, not allele frequencies.
 As a result:
 * Alleles can be introduced into new populations via migration
@@ -103,7 +147,7 @@ Migration therefore interacts naturally with multiple alleles without special ha
 
 ---
 
-## 7. Edge Cases and Safegaurds 
+## 8. Edge Cases and Safegaurds 
 The implementation safely handles:
 1. Extinct populations
 
