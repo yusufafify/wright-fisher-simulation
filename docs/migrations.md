@@ -16,7 +16,7 @@ Migration is applied after reproduction and mutation, but before allele frequenc
 ## 1. Migration Model
 
 At a given generation, migration is applied if:
-* The migration event is active at time 
+* The migration event is active at time _t_
 * Both source and destination populations exist and are non-empty
 
 The expected number of migrants is:
@@ -69,4 +69,5 @@ In addition to continuous migration, the simulator supports pulse events:
 * Occur at a single generation
 * Transfer a fixed proportion of individuals instantly
 * Defined in the Demes file
+
 Pulse migration is handled separately in `_handle_pulses()`.
