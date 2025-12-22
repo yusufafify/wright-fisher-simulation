@@ -48,3 +48,28 @@ Future alleles are excluded from the initial population and introduced
 only when specified.
 
 ---
+
+## 3. Allele Frequency Tracking
+At each generation, allele frequencies are recorded as:
+
+```python
+freqs = {
+    allele: count / population_size
+    for allele in self.alleles
+}
+```
+Alleles not present in a population automatically receive frequency 0.0.
+
+This guarantees:
+$$
+\sum_{alleles} f = 1
+$$
+for every population and generation.
+
+---
+
+## 4. Plotting Considerations
+Allele frequencies are plotted **only within the lifespan of a population**.
+
+Alleles are shown only after their introduction time, with missing values
+represented as `NaN` to avoid biologically invalid curves.
