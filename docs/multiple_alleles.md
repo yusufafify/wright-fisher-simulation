@@ -30,6 +30,7 @@ This representation allows:
 ---
 ## 2. Allele Introduction
 1. Declaring Alleles Explicitly
+
 Alleles are passed using the alleles argument:
 
 ```python
@@ -44,6 +45,7 @@ This tells the simulator:
 * Including alleles introduced later during the simulation
 
 2. Initial Allele Frequencies
+
 Initial allele frequencies apply only to active alleles.
 * Uniform frequencies (default)
 ```python
@@ -62,6 +64,7 @@ initial_allele_frequency = {
 }
 ```
 3. Introducing Alleles During the Simulation
+
 New alleles are introduced dynamically using the configuration file:
 
 ```yaml
@@ -88,6 +91,7 @@ self.alleles = [
     if a not in future_alleles_set
 ]
 ```
+
 Future alleles are excluded from the initial population and introduced
 only when specified.
 
