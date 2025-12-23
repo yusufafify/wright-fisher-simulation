@@ -60,7 +60,19 @@ The simulator uses the [Demes](https://popsim-consortium.github.io/demes-spec-do
 - Python 3.7+
 - pip package manager
 
-### Setup
+### Quick Installation
+
+**Via pip (from GitHub):**
+```bash
+pip install git+https://github.com/yusufafify/wright-fisher-simulation.git
+```
+
+**Via R devtools:**
+```r
+devtools::install_github("yusufafify/wright-fisher-simulation")
+```
+
+### Development Setup
 
 1. **Clone or download the repository**
 
@@ -129,26 +141,21 @@ The Wright-Fisher model describes genetic drift in an idealized population:
 - Random mating
 - Each individual in generation `t+1` is sampled from generation `t` with replacement
 
-### Mutations
+### Advanced Features
 
-This implementation supports **bidirectional mutations**:
+This simulator supports advanced evolutionary features. For detailed documentation, see the `docs/` directory:
 
-```
-        μ (forward)
-Wild-type ⟷ Mutant
-        μ (backward)
-```
-
-- **Forward mutation**: Wild-type allele mutates to mutant (rate: μ)
-- **Backward mutation**: Mutant allele reverts to wild-type (rate: μ)
-- Both directions occur at equal rates
-- Enables mutation-drift equilibrium
+- **[Mutations](docs/mutations.md)**: Bidirectional mutations between wild-type and mutant alleles
+- **[Selection](docs/selection.md)**: Fitness-based selection with configurable coefficients
+- **[Migration](docs/migrations.md)**: Continuous and pulse migration between populations
+- **[Multiple Alleles](docs/multiple_alleles.md)**: Support for arbitrary number of alleles
+- **[Configurable Allele Introduction](docs/configurable_allele_introduction.md)**: Dynamic introduction of new alleles
 
 ### Simulation Timeline
 
 Each generation follows this sequence:
 
-1. **Wright-Fisher sampling**: Random reproduction
+1. **Wright-Fisher sampling**: Random reproduction (with selection if specified)
 2. **Mutation application**: Bidirectional mutations applied
 3. **Migration**: Gene flow between populations (if specified)
 4. **Pulse events**: Instantaneous admixture (if scheduled)
@@ -229,10 +236,13 @@ results = sim.run()
 | Parameter                  | Type  | Default    | Description                                     |
 | -------------------------- | ----- | ---------- | ----------------------------------------------- |
 | `demes_file_path`          | str   | *required* | Path to Demes YAML file                         |
-| `initial_allele_frequency` | float | 0.5        | Initial frequency of wild-type allele (0.0-1.0) |
+| `config_file_path`         | str   | None       | Path to configuration YAML file (for new alleles, etc.) |
+| `alleles`                  | list  | [0, 1]     | List of allele identifiers                      |
+| `initial_allele_frequency` | float/dict | 0.5   | Initial frequency of alleles (0.0-1.0) or dict mapping |
 | `mutation_rate`            | float | 0.0        | Per-generation mutation probability (0.0-1.0)   |
 | `wild_type`                | int   | 0          | Allele identifier for wild-type                 |
 | `seed`                     | int   | None       | Random seed for reproducibility                 |
+| `selection_coefficients`   | dict  | None       | Dictionary mapping alleles to selection coefficients |
 
 **Methods**:
 
@@ -270,7 +280,7 @@ results = sim.run()
 
 #### `plot_results(results, title)`
 
-Visualize simulation results.
+Visualize simulation results. **Available directly when the package is installed** - import it from `evolutionary_simulator.core`.
 
 **Parameters**:
 - `results` (dict): Output from `sim.run()`
@@ -281,6 +291,14 @@ Visualize simulation results.
 - Aligns all populations to end at the present
 - Displays legend with population names
 - Grid and axis labels included
+
+**Usage after installation**:
+```python
+from evolutionary_simulator.core import WrightFisherSim, plot_results
+
+results = sim.run()
+plot_results(results)  # Directly available!
+```
 
 ---
 
@@ -406,85 +424,8 @@ pulses:
 
 ---
 
-## Implementation Details
-
-### Mutation Algorithm
-
-```python
-for each individual in population:
-    if random() < mutation_rate:
-        if individual.allele == wild_type:
-            # Forward mutation
-            individual.allele = random_choice(mutant_alleles)
-        else:
-            # Backward mutation
-            individual.allele = wild_type
-```
-
-### Time Direction
-
-The simulator runs **backwards in time** (coalescent direction):
-- `T = max_time` → Past
-- `T = 0` → Present
-
-This is standard for coalescent simulations and aligns with the Demes specification.
-
-### Population Initialization
-
-**De novo populations** (no ancestors):
-```python
-alleles = [1 if random() < initial_freq else 0 
-           for _ in range(population_size)]
-```
-
-**Derived populations** (with ancestors):
-```python
-# Sample from ancestral populations based on proportions
-for ancestor, proportion in zip(ancestors, proportions):
-    count = int(population_size * proportion)
-    new_alleles.extend(random.choices(ancestor_alleles, k=count))
-```
-
-### Migration Implementation
-
-**Continuous migration** (rate `m` per generation):
-```python
-expected_migrants = destination_size * m
-num_migrants = int(expected_migrants)
-# Handle fractional migrants probabilistically
-if random() < (expected_migrants - num_migrants):
-    num_migrants += 1
-    
-migrants = random.choices(source_population, k=num_migrants)
-# Replace random individuals in destination
-```
-
----
 
 ## Scientific Background
-
-### Mutation-Drift Equilibrium
-
-At equilibrium under mutation and drift:
-
-**Two alleles**:
-- Expected heterozygosity: `H = 4Nμ / (1 + 4Nμ)`
-- where `N` = population size, `μ` = mutation rate
-
-**Infinite alleles model**:
-- `θ = 4Nμ` (population mutation rate)
-- Determines expected genetic diversity
-
-### Recommended Mutation Rates
-
-| Organism    | Per-base mutation rate (μ) |
-| ----------- | -------------------------- |
-| Bacteria    | 10⁻⁹ to 10⁻¹⁰              |
-| Humans      | ~10⁻⁸                      |
-| Drosophila  | ~10⁻⁸                      |
-| RNA viruses | 10⁻³ to 10⁻⁵               |
-
-For **effective locus-level rates**, multiply by number of mutable sites.
 
 ### Applications
 
@@ -494,14 +435,6 @@ For **effective locus-level rates**, multiply by number of mutable sites.
 4. **Population structure**: Effects of migration and splits
 5. **Conservation genetics**: Loss of variation in small populations
 
-### References
-
-- Kimura, M. (1964). "Diffusion models in population genetics." *Journal of Applied Probability*, 1(2), 177-232.
-- Crow, J. F., & Kimura, M. (1970). *An Introduction to Population Genetics Theory*. Harper & Row.
-- Ewens, W. J. (2004). *Mathematical Population Genetics*. Springer.
-- Wright, S. (1931). "Evolution in Mendelian populations." *Genetics*, 16(2), 97-159.
-
----
 
 ## File Structure
 
@@ -509,14 +442,14 @@ For **effective locus-level rates**, multiply by number of mutable sites.
 wright-fisher-simulation/
 ├── evolutionary_simulator/       # Main package
 │   ├── __init__.py
-│   └── core.py                  # Two-allele implementation
-├── dev/                         # Development and examples
-│   ├── simulator.py            # Multi-allele implementation
-│   ├── deme_test.yml           # Example population model
+│   └── core.py                  # Prod Code
+├── dev/                         # Development dir 
+│   ├── simulator.py            # Dev code
+│   ├── deme_test.yml           # Example population 
 │   ├── test_mutation.py        # Unit tests
 ├── setup.py                     # Package configuration
 ├── requirements.txt             # Dependencies
-└── README.md                    # This file
+└── README.md                   
 ```
 
 ---
@@ -581,6 +514,17 @@ plt.savefig('output.png')  # Save instead of show
 | Salsabeel Mostafa   | 1210171 |
 
 ---
+
+
+### References
+
+- Kimura, M. (1964). "Diffusion models in population genetics." *Journal of Applied Probability*, 1(2), 177-232.
+- Crow, J. F., & Kimura, M. (1970). *An Introduction to Population Genetics Theory*. Harper & Row.
+- Ewens, W. J. (2004). *Mathematical Population Genetics*. Springer.
+- Wright, S. (1931). "Evolution in Mendelian populations." *Genetics*, 16(2), 97-159.
+
+---
+
 
 ## License
 
